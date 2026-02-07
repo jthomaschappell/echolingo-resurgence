@@ -6,147 +6,192 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const DAY = 86400000
-
-const orders = [
-  // crew_riverside — anchor bolts
-  {
-    crewId: 'crew_riverside',
-    item: 'anchor bolts 3/8"',
-    normalizedItem: 'anchor_bolt',
-    quantity: 500,
-    unit: 'pieces',
-    supplier: 'FastenAll Supply Co.',
-    cost: 245.00,
-    orderedAt: new Date(Date.now() - 30 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 28 * DAY).toISOString(),
-    notes: 'Standard 3/8" galvanized',
-  },
-  {
-    crewId: 'crew_riverside',
-    item: 'anchor bolts 3/8"',
-    normalizedItem: 'anchor_bolt',
-    quantity: 450,
-    unit: 'pieces',
-    supplier: 'FastenAll Supply Co.',
-    cost: 220.50,
-    orderedAt: new Date(Date.now() - 60 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 58 * DAY).toISOString(),
-    notes: 'Reorder for phase 2',
-  },
-  {
-    crewId: 'crew_riverside',
-    item: 'anchor bolts 3/8"',
-    normalizedItem: 'anchor_bolt',
-    quantity: 600,
-    unit: 'pieces',
-    supplier: 'FastenAll Supply Co.',
-    cost: 294.00,
-    orderedAt: new Date(Date.now() - 90 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 87 * DAY).toISOString(),
-    notes: 'Initial foundation order',
-  },
-  // crew_riverside — rebar
-  {
-    crewId: 'crew_riverside',
-    item: 'rebar #4',
-    normalizedItem: 'rebar',
-    quantity: 200,
-    unit: 'pieces',
-    supplier: 'SteelMax Distributors',
-    cost: 890.00,
-    orderedAt: new Date(Date.now() - 15 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 12 * DAY).toISOString(),
-    notes: '#4 rebar 20ft lengths',
-  },
-  {
-    crewId: 'crew_riverside',
-    item: 'rebar #4',
-    normalizedItem: 'rebar',
-    quantity: 150,
-    unit: 'pieces',
-    supplier: 'SteelMax Distributors',
-    cost: 667.50,
-    orderedAt: new Date(Date.now() - 45 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 42 * DAY).toISOString(),
-  },
-  // crew_riverside — concrete
-  {
-    crewId: 'crew_riverside',
-    item: 'ready mix concrete',
-    normalizedItem: 'concrete',
-    quantity: 10,
-    unit: 'yards',
-    supplier: 'ReadyMix Central',
-    cost: 1200.00,
-    orderedAt: new Date(Date.now() - 7 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 7 * DAY).toISOString(),
-    notes: '3000 PSI mix',
-  },
-  // crew_downtown — lumber
-  {
-    crewId: 'crew_downtown',
-    item: '2x4 lumber',
-    normalizedItem: 'lumber_2x4',
-    quantity: 100,
-    unit: 'pieces',
-    supplier: 'BuildRight Lumber',
-    cost: 320.00,
-    orderedAt: new Date(Date.now() - 20 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 18 * DAY).toISOString(),
-    notes: '8ft studs',
-  },
-  {
-    crewId: 'crew_downtown',
-    item: '2x4 lumber',
-    normalizedItem: 'lumber_2x4',
-    quantity: 80,
-    unit: 'pieces',
-    supplier: 'BuildRight Lumber',
-    cost: 256.00,
-    orderedAt: new Date(Date.now() - 50 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 48 * DAY).toISOString(),
-  },
-  // crew_downtown — drywall
-  {
-    crewId: 'crew_downtown',
-    item: 'drywall 4x8',
-    normalizedItem: 'drywall',
-    quantity: 50,
-    unit: 'sheets',
-    supplier: 'WallBoard Direct',
-    cost: 420.00,
-    orderedAt: new Date(Date.now() - 10 * DAY).toISOString(),
-    deliveredAt: new Date(Date.now() - 8 * DAY).toISOString(),
-    notes: '1/2" standard',
-  },
-]
-
 async function seed() {
-  console.log('Seeding SupplyOrder table...')
+  console.log('Seeding demo data...')
 
-  // Clear existing data
-  const { error: deleteError } = await supabase
+  // --- Messages ---
+  console.log('Seeding Message table...')
+  const { error: msgError } = await supabase.from('Message').upsert([
+    {
+      id: '11111111-1111-1111-1111-111111111111',
+      workerId: 'worker-01',
+      spanishRaw: 'Necesitamos más concreto en la zona norte.',
+      englishRaw: 'We need more concrete in the north area.',
+      englishFormatted: 'Requesting additional concrete for the north zone.',
+      category: 'materials',
+      urgency: 'high',
+      twilioSid: 'SM0001',
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '22222222-2222-2222-2222-222222222222',
+      workerId: 'worker-02',
+      spanishRaw: 'La entrega llegó dañada.',
+      englishRaw: 'The delivery arrived damaged.',
+      englishFormatted: 'Report of damaged delivery.',
+      category: 'issue',
+      urgency: 'urgent',
+      twilioSid: 'SM0002',
+      createdAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '33333333-3333-3333-3333-333333333333',
+      workerId: 'worker-03',
+      spanishRaw: '¿Podemos recibir más guantes?',
+      englishRaw: 'Can we receive more gloves?',
+      englishFormatted: 'Request for additional gloves.',
+      category: 'materials',
+      urgency: 'normal',
+      twilioSid: 'SM0003',
+      createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    },
+  ], { onConflict: 'id' })
+
+  if (msgError) console.error('Message seed error:', msgError)
+  else console.log('Messages seeded')
+
+  // --- Supervisor Replies ---
+  console.log('Seeding SupervisorReply table...')
+  const { error: replyError } = await supabase.from('SupervisorReply').upsert([
+    {
+      id: 'aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
+      messageId: '11111111-1111-1111-1111-111111111111',
+      englishRaw: 'Approved. Ordering one more truck.',
+      spanishTrans: 'Aprobado. Pediremos otro camión.',
+      actionSummary: 'Order extra concrete truck.',
+      createdAt: new Date(Date.now() - 100 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaa2',
+      messageId: '22222222-2222-2222-2222-222222222222',
+      englishRaw: 'Take photos and send to supplier.',
+      spanishTrans: 'Tomen fotos y envíenlas al proveedor.',
+      actionSummary: 'Collect evidence and notify supplier.',
+      createdAt: new Date(Date.now() - 70 * 60 * 1000).toISOString(),
+    },
+  ], { onConflict: 'id' })
+
+  if (replyError) console.error('SupervisorReply seed error:', replyError)
+  else console.log('SupervisorReplies seeded')
+
+  // --- Supply Orders ---
+  console.log('Seeding SupplyOrder table...')
+  const { error: delOrderError } = await supabase
     .from('SupplyOrder')
     .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000') // delete all rows
+    .neq('id', '00000000-0000-0000-0000-000000000000')
+  if (delOrderError) console.error('Error clearing SupplyOrder:', delOrderError)
 
-  if (deleteError) {
-    console.error('Error clearing SupplyOrder:', deleteError)
-  }
+  const { error: orderError } = await supabase.from('SupplyOrder').insert([
+    {
+      id: 'bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1',
+      crewId: 'crew-A',
+      item: 'Concrete 4000 PSI',
+      normalizedItem: 'concrete',
+      quantity: 10,
+      unit: 'yards',
+      supplier: 'Best Concrete Co',
+      cost: 2500.00,
+      orderedAt: new Date(Date.now() - 95 * 60 * 1000).toISOString(),
+      deliveredAt: null,
+      notes: 'Rush order',
+    },
+    {
+      id: 'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2',
+      crewId: 'crew-B',
+      item: 'Work gloves',
+      normalizedItem: 'gloves',
+      quantity: 50,
+      unit: 'pairs',
+      supplier: 'Safety Supply',
+      cost: 320.00,
+      orderedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+      deliveredAt: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: null,
+    },
+  ])
 
-  // Batch insert
-  const { data, error } = await supabase
-    .from('SupplyOrder')
-    .insert(orders)
-    .select()
+  if (orderError) console.error('SupplyOrder seed error:', orderError)
+  else console.log('SupplyOrders seeded')
 
-  if (error) {
-    console.error('Seed error:', error)
-    process.exit(1)
-  }
+  // --- Supply Requests ---
+  console.log('Seeding SupplyRequest table...')
+  const { error: delReqError } = await supabase
+    .from('SupplyRequest')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000')
+  if (delReqError) console.error('Error clearing SupplyRequest:', delReqError)
 
-  console.log(`Seeded ${data.length} supply orders`)
+  const { error: reqError } = await supabase.from('SupplyRequest').insert([
+    {
+      id: 'ccccccc1-cccc-cccc-cccc-ccccccccccc1',
+      originalMessageId: '11111111-1111-1111-1111-111111111111',
+      crewId: 'crew-A',
+      workerId: 'worker-01',
+      item: 'Concrete 4000 PSI',
+      normalizedItem: 'concrete',
+      quantity: 10,
+      unit: 'yards',
+      urgency: 'high',
+      status: 'APPROVED',
+      suggestedQuantity: 12,
+      suggestedSupplier: 'Best Concrete Co',
+      estimatedTotal: 3000.00,
+      responseTimeMinutes: 15,
+      approvedBy: 'supervisor-1',
+      approvedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+      modifiedQuantity: 12,
+      rejectionReason: null,
+      createdAt: new Date(Date.now() - 110 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'ccccccc2-cccc-cccc-cccc-ccccccccccc2',
+      originalMessageId: '33333333-3333-3333-3333-333333333333',
+      crewId: 'crew-B',
+      workerId: 'worker-03',
+      item: 'Work gloves',
+      normalizedItem: 'gloves',
+      quantity: null,
+      unit: 'pairs',
+      urgency: 'normal',
+      status: 'PENDING',
+      suggestedQuantity: 40,
+      suggestedSupplier: 'Safety Supply',
+      estimatedTotal: 250.00,
+      responseTimeMinutes: null,
+      approvedBy: null,
+      approvedAt: null,
+      modifiedQuantity: null,
+      rejectionReason: null,
+      createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'ccccccc3-cccc-cccc-cccc-ccccccccccc3',
+      originalMessageId: null,
+      crewId: 'crew-C',
+      workerId: 'worker-09',
+      item: 'Lumber 2x4',
+      normalizedItem: 'lumber_2x4',
+      quantity: 100,
+      unit: 'pieces',
+      urgency: 'normal',
+      status: 'REJECTED',
+      suggestedQuantity: 80,
+      suggestedSupplier: 'Timber Yard',
+      estimatedTotal: 900.00,
+      responseTimeMinutes: 60,
+      approvedBy: null,
+      approvedAt: null,
+      modifiedQuantity: null,
+      rejectionReason: 'Already over budget.',
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ])
+
+  if (reqError) console.error('SupplyRequest seed error:', reqError)
+  else console.log('SupplyRequests seeded')
+
+  console.log('Done!')
   process.exit(0)
 }
 

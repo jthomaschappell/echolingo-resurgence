@@ -23,7 +23,7 @@ export async function analyzeAndReformatMessage(
   try {
     console.log('[FLOW][Claude] Calling Claude API for analysis...')
     const response = await claudeClient.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
       messages: [
         {
@@ -102,7 +102,7 @@ export async function analyzeAndReformatMessageEnglishToSpanish(
   try {
     console.log('[FLOW][Claude] Calling Claude API for English→Spanish analysis...')
     const response = await claudeClient.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
       messages: [
         {
@@ -164,7 +164,7 @@ export async function extractActionItems(englishText: string): Promise<string> {
   try {
     console.log('[FLOW][Claude] extractActionItems called, input:', englishText?.slice(0, 80) + '...')
     const response = await claudeClient.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
       messages: [
         {
