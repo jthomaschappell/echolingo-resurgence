@@ -50,9 +50,8 @@ lerna-debug.log*
 *.tsbuildinfo
 tsconfig.tsbuildinfo
 
-# prisma
-/prisma/migrations
-# Prisma client is generated in node_modules, which is already ignored above
+# supabase local (if using Supabase CLI)
+.supabase/
 
 # IDE and editor files
 .vscode/

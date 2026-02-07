@@ -15,7 +15,7 @@ Real-time communication between Spanish-speaking Mexican workers and English-spe
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Express + Socket.io
-- **Database**: PostgreSQL + Prisma
+- **Database**: Supabase (PostgreSQL via client)
 - **AI Services**: Cerebras (translation), Claude (analysis)
 - **Messaging**: Twilio WhatsApp API
 
@@ -24,14 +24,16 @@ Real-time communication between Spanish-speaking Mexican workers and English-spe
 ### Prerequisites
 
 - Node.js 18+ and npm
-- PostgreSQL database
-- API keys for:
-  - Cerebras API
-  - Anthropic Claude API
-  - Twilio (WhatsApp enabled)
+- Accounts for the following services (all have free tiers):
+  - **Supabase** (database)
+  - **Cerebras** (translation)
+  - **Anthropic Claude** (AI analysis)
+  - **Twilio** (WhatsApp messaging)
 - **Browser**: Chrome or Edge (for Web Speech API support)
 
 ### Installation
+
+**📋 TIP:** Use [SETUP-CHECKLIST.md](SETUP-CHECKLIST.md) to track your progress through these steps!
 
 1. **Clone and install dependencies:**
    ```bash
@@ -42,30 +44,143 @@ Real-time communication between Spanish-speaking Mexican workers and English-spe
    ```bash
    cp .env.example .env
    ```
-   Fill in all required API keys and database URL.
+   Then follow the detailed setup instructions below to fill in all API keys.
 
-3. **Set up database:**
-   ```bash
-   npm run db:generate
-   npm run db:push
+### Detailed API Setup Instructions
+
+#### 1. Supabase Database Setup
+
+1. Go to [supabase.com](https://supabase.com) and create a free account
+2. Click **New Project**
+3. Fill in project details:
+   - Name: `crew-link` (or your preferred name)
+   - Database Password: Create a strong password (save this!)
+   - Region: Choose closest to your location
+4. Wait for project to finish setting up (1-2 minutes)
+5. In your project dashboard, go to **Settings** → **API**
+6. Copy the **Project URL** and paste into `.env` as `NEXT_PUBLIC_SUPABASE_URL`
+7. Copy the **service_role** key (under "Project API keys") and paste into `.env` as `SUPABASE_SERVICE_ROLE_KEY`
+8. Run the schema: Go to **SQL Editor** → New query → paste contents of `supabase/schema.sql` → Run
+
+**Environment variables:**
+```
+NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Important:** Keep the service role key secret—it bypasses Row Level Security.
+
+#### 2. Cerebras API Key
+
+1. Go to [cloud.cerebras.ai](https://cloud.cerebras.ai)
+2. Sign up for a free account (no credit card required for initial credits)
+3. After logging in, navigate to **API Keys** in the left sidebar
+4. Click **Generate new API key**
+5. Copy the API key (starts with `csk-...`)
+6. Paste into your `.env` file as `CEREBRAS_API_KEY`
+
+**Example:**
+```
+CEREBRAS_API_KEY="csk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+#### 3. Anthropic Claude API Key
+
+1. Go to [console.anthropic.com](https://console.anthropic.com)
+2. Sign up for an account
+3. Add billing information (required, but you get $5 free credits)
+4. Go to **API Keys** at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+5. Click **Create Key**
+6. Give it a name (e.g., "Crew Link App")
+7. Copy the API key (starts with `sk-ant-...`)
+8. Paste into your `.env` file as `ANTHROPIC_API_KEY`
+
+**Example:**
+```
+ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+#### 4. Twilio WhatsApp Setup
+
+**Get Account Credentials:**
+1. Go to [twilio.com](https://www.twilio.com) and sign up for a free account
+2. Complete phone verification
+3. In the Twilio Console dashboard, find your:
+   - **Account SID** (starts with `AC...`)
+   - **Auth Token** (click to reveal)
+4. Copy these to your `.env` file
+
+**Set Up WhatsApp Sandbox (for testing):**
+1. In Twilio Console, go to **Messaging** → **Try it out** → **Send a WhatsApp message**
+2. You'll see a sandbox number (usually `+1 415 523 8886`) and a join code
+3. On your phone, send a WhatsApp message to `+1 415 523 8886` with the text: `join <your-code>`
+   - Example: `join happy-elephant`
+4. You'll receive a confirmation message
+5. Add to your `.env`:
    ```
-
-4. **Start development servers:**
-
-   Terminal 1 (Next.js app):
-   ```bash
-   npm run dev
+   TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
+   SUPERVISOR_WHATSAPP="whatsapp:+1YOURNUMBER"
    ```
+   Replace `YOURNUMBER` with your phone number (the one you joined with)
 
-   Terminal 2 (Socket.io server):
-   ```bash
-   npm run server
-   ```
+**Example `.env` entries:**
+```
+TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+TWILIO_AUTH_TOKEN="your-auth-token-here"
+TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
+SUPERVISOR_WHATSAPP="whatsapp:+15551234567"
+```
 
-5. **Configure Twilio Webhook:**
-   - In Twilio Console, set webhook URL to: `https://your-domain.com/webhook/twilio`
-   - For local development, use ngrok: `ngrok http 3001`
-   - Update webhook URL in Twilio with ngrok URL
+**Important:** The sandbox expires after 3 days of inactivity. To reconnect, send the join message again.
+
+#### 5. Additional Environment Variables
+
+Add these to your `.env`:
+```
+SOCKET_SERVER_PORT=3001
+NEXT_PUBLIC_SOCKET_SERVER_URL=http://localhost:3001
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Initialize the Database
+
+Once your `.env` is complete:
+
+```bash
+npm run db:generate
+npm run db:push
+```
+
+This creates the necessary database tables in Supabase.
+
+### Start Development Servers
+
+Open **two terminal windows**:
+
+**Terminal 1 - Next.js app:**
+```bash
+npm run dev
+```
+
+**Terminal 2 - Socket.io server:**
+```bash
+npm run server
+```
+
+The app will be available at `http://localhost:3000`
+
+### Configure Twilio Webhook (for supervisor replies)
+
+To receive supervisor replies in real-time:
+
+1. Install ngrok: `brew install ngrok` (Mac) or download from [ngrok.com](https://ngrok.com)
+2. Start ngrok: `ngrok http 3001`
+3. Copy the HTTPS URL (e.g., `https://abc123.ngrok.io`)
+4. In Twilio Console, go to **Messaging** → **Settings** → **WhatsApp sandbox settings**
+5. Under **When a message comes in**, paste: `https://abc123.ngrok.io/webhook/twilio`
+6. Save
+
+Now supervisor replies will appear instantly in the worker interface!
 
 ### Environment Variables
 
@@ -76,7 +191,8 @@ See `.env.example` for all required variables:
 - `TWILIO_AUTH_TOKEN` - Twilio auth token
 - `TWILIO_WHATSAPP_FROM` - Twilio WhatsApp number (format: `whatsapp:+14155238886`)
 - `SUPERVISOR_WHATSAPP` - Supervisor's WhatsApp number (format: `whatsapp:+1...`)
-- `DATABASE_URL` - PostgreSQL connection string
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-side)
 - `SOCKET_SERVER_PORT` - Port for Socket.io server (default: 3001)
 - `NEXT_PUBLIC_SOCKET_SERVER_URL` - Socket.io server URL (for client connection)
 - `NEXT_PUBLIC_APP_URL` - Next.js app URL (for CORS)
@@ -158,12 +274,12 @@ echolingo-resurgence/
 │   ├── cerebras.ts              # Translation service
 │   ├── claude.ts                # Analysis service
 │   ├── twilio.ts                # WhatsApp service
-│   └── prisma.ts                # Database client
+│   └── supabase.ts              # Supabase client
 ├── server/
 │   ├── index.ts                 # Express + Socket.io server
-│   └── twilioWebhook.ts        # Twilio webhook handler
-├── prisma/
-│   └── schema.prisma            # Database schema
+│   └── twilioWebhook.ts         # Twilio webhook handler
+├── supabase/
+│   └── schema.sql               # Database schema (run in Supabase SQL Editor)
 └── package.json
 ```
 
@@ -171,18 +287,79 @@ echolingo-resurgence/
 
 - **Next.js dev server**: `npm run dev` (port 3000)
 - **Socket.io server**: `npm run server` (port 3001)
-- **Database studio**: `npm run db:studio`
-- **Generate Prisma client**: `npm run db:generate`
-- **Push schema changes**: `npm run db:push`
 
 ## Production Deployment
 
-1. Set up PostgreSQL database (e.g., Vercel Postgres, Supabase, Railway)
-2. Deploy Next.js app (e.g., Vercel)
-3. Deploy Socket.io server (e.g., Railway, Render, or same server as Next.js)
-4. Update environment variables in production
-5. Configure Twilio webhook URL to production Socket.io server
-6. Ensure CORS settings allow production domains
+### Database (Supabase)
+Your Supabase database is already set up from the development setup. For production:
+1. Same Supabase project URL and service role key work in production
+2. Ensure production env has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+3. Consider upgrading from the free tier if you expect high traffic
+
+### Next.js App (Vercel - Recommended)
+1. Push your code to GitHub
+2. Go to [vercel.com](https://vercel.com) and import your repository
+3. Add all environment variables from your `.env` file
+4. Add all env vars including `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+5. Deploy
+
+### Socket.io Server (Railway/Render)
+The Socket.io server needs a persistent connection, so deploy separately:
+
+**Option 1: Railway**
+1. Go to [railway.app](https://railway.app)
+2. Create new project from GitHub repo
+3. Add environment variables (all from `.env` except Next.js-specific ones)
+4. Set start command: `npm run server`
+5. Note the public URL (e.g., `https://your-app.railway.app`)
+
+**Option 2: Render**
+1. Go to [render.com](https://render.com)
+2. Create new Web Service from GitHub
+3. Build command: `npm install`
+4. Start command: `npm run server`
+5. Add environment variables
+6. Deploy
+
+### Final Configuration
+1. Update `NEXT_PUBLIC_SOCKET_SERVER_URL` in Vercel to your Socket.io server URL
+2. Configure Twilio webhook to `https://your-socket-server.railway.app/webhook/twilio`
+3. Update CORS settings if needed for your production domains
+
+## Troubleshooting
+
+### "Speech Recognition not supported"
+- Use Chrome or Edge browser (Safari/Firefox don't support Web Speech API)
+- Ensure you're on HTTPS in production (required for microphone access)
+
+### Database Connection Issues
+- Verify your Supabase password is correct in the connection string
+- Check that you've replaced `[YOUR-PASSWORD]` in the connection string
+- For serverless deployments, ensure you're using port 6543 with `?pgbouncer=true`
+- Run `npm run db:push` to create tables if they don't exist
+
+### Twilio WhatsApp Not Working
+- Verify you've joined the sandbox: send `join <your-code>` to +1 415 523 8886
+- Sandbox expires after 3 days - rejoin if needed
+- Check that `SUPERVISOR_WHATSAPP` matches the number you joined with (include country code)
+- Webhook must be HTTPS (use ngrok for local testing)
+
+### Supervisor Replies Not Appearing
+- Ensure Socket.io server is running (`npm run server`)
+- Check that Twilio webhook is configured correctly
+- Verify webhook URL is accessible (ngrok tunnel active)
+- Check browser console for Socket.io connection errors
+
+### API Key Errors
+- **Cerebras**: Ensure key starts with `csk-`
+- **Claude**: Ensure key starts with `sk-ant-` and you have credits/billing set up
+- **Twilio**: Verify both Account SID and Auth Token are correct
+- Check for extra spaces or quotes in your `.env` file
+
+### Messages Not Translating
+- Check Cerebras API credits at cloud.cerebras.ai
+- Verify `CEREBRAS_API_KEY` is set correctly
+- Check server logs for API error messages
 
 ## License
 
