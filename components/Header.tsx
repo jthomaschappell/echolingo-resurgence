@@ -1,28 +1,36 @@
 'use client'
 
+import { useLanguage } from '@/context/LanguageContext'
+
 export default function Header() {
+  const { t } = useLanguage()
+
   return (
-    <header className="w-full bg-primary-orange px-4 py-3 flex items-center justify-center">
+    <header className="w-full bg-white/95 backdrop-blur-sm border-b border-palette-golden/20 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="text-golden-amber"
-        >
-          <path
-            d="M8 2L6 4L8 6M16 2L18 4L16 6M8 22L6 20L8 18M16 22L18 20L16 18M4 8L2 10L4 12M20 8L22 10L20 12M12 2V4M12 20V22M2 12H4M20 12H22"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <h1 className="text-golden-amber text-xl font-bold tracking-wide">
-          CREW LINK
-        </h1>
+        <div className="w-8 h-8 rounded-lg bg-stripe-primary flex items-center justify-center">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-white"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+              fill="currentColor"
+            />
+          </svg>
+        </div>
+        <span className="text-stripe-dark text-lg font-semibold tracking-tight">
+          crew link
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <button className="text-stripe-orange font-medium text-sm hover:opacity-80 transition-opacity">
+          {t.signIn}
+        </button>
       </div>
     </header>
   )
