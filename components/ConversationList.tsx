@@ -37,7 +37,7 @@ export default function ConversationList({
           <div>
             <p className="text-stripe-dark text-base">
               <span className="font-semibold text-stripe-primary">{t.emptyStateGreeting}</span>{' '}
-              {isSpanishMode ? t.emptyStateInstructionEnglish : t.emptyStateInstruction}
+              {isSpanishMode ? t.emptyStateInstruction : t.emptyStateInstructionEnglish}
             </p>
             <p className="text-stripe-muted text-sm mt-1">
               {t.emptyStateNote}

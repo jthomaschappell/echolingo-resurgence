@@ -30,23 +30,8 @@ export async function POST(request: NextRequest) {
     let contextNotes: string | undefined
 
     if (mode) {
-      // ES mode: User spoke English → translate to Spanish → supervisor receives Spanish
-      console.log('[FLOW][API] English→Spanish flow (ES mode)')
-      const englishText = text
-      console.log('[FLOW][API] Step 1: Calling Cerebras for English→Spanish translation...')
-      spanishRaw = await translateEnglishToSpanish(englishText)
-      console.log('[FLOW][API] Cerebras translation complete:', { spanishRaw: spanishRaw?.slice(0, 80) + '...' })
-
-      console.log('[FLOW][API] Step 2: Calling Claude for analysis and Spanish formatting...')
-      const analysis = await analyzeAndReformatMessageEnglishToSpanish(englishText, spanishRaw)
-      formattedForSupervisor = analysis.spanishFormatted
-      category = analysis.category
-      urgency = analysis.urgency
-      contextNotes = analysis.contextNotes
-      englishRaw = englishText
-    } else {
-      // EN mode: User spoke Spanish → translate to English → supervisor receives English
-      console.log('[FLOW][API] Spanish→English flow (EN mode)')
+      // ES mode (UI in Spanish): User spoke Spanish → translate to English → supervisor receives English
+      console.log('[FLOW][API] Spanish→English flow (ES mode)')
       const spanishText = text
       console.log('[FLOW][API] Step 1: Calling Cerebras for Spanish→English translation...')
       englishRaw = await translateSpanishToEnglish(spanishText)
@@ -59,6 +44,21 @@ export async function POST(request: NextRequest) {
       urgency = analysis.urgency
       contextNotes = analysis.contextNotes
       spanishRaw = spanishText
+    } else {
+      // EN mode (UI in English): User spoke English → translate to Spanish → supervisor receives Spanish
+      console.log('[FLOW][API] English→Spanish flow (EN mode)')
+      const englishText = text
+      console.log('[FLOW][API] Step 1: Calling Cerebras for English→Spanish translation...')
+      spanishRaw = await translateEnglishToSpanish(englishText)
+      console.log('[FLOW][API] Cerebras translation complete:', { spanishRaw: spanishRaw?.slice(0, 80) + '...' })
+
+      console.log('[FLOW][API] Step 2: Calling Claude for analysis and Spanish formatting...')
+      const analysis = await analyzeAndReformatMessageEnglishToSpanish(englishText, spanishRaw)
+      formattedForSupervisor = analysis.spanishFormatted
+      category = analysis.category
+      urgency = analysis.urgency
+      contextNotes = analysis.contextNotes
+      englishRaw = englishText
     }
 
     console.log('[FLOW][API] Claude analysis complete:', {

@@ -40,7 +40,7 @@ export default function WorkerPage() {
       newSocket.emit('join-worker-room', { workerId })
     })
 
-    newSocket.on('supervisor-reply', (data: { spanishTrans: string; actionSummary: string; messageId: string }) => {
+    newSocket.on('supervisor-reply', (data: { spanishTrans: string; actionSummary: string; messageId: string; englishRaw?: string }) => {
       console.log('[FLOW][Worker] Received supervisor-reply via Socket.io:', {
         messageId: data.messageId,
         spanishTrans: data.spanishTrans?.slice(0, 50) + '...',
@@ -51,6 +51,7 @@ export default function WorkerPage() {
         spanishRaw: '',
         urgency: 'normal',
         createdAt: new Date(),
+        isSupervisorReply: true,
         ...data,
       }
       setMessages((prev) => [...prev, replyMessage])
@@ -69,6 +70,7 @@ export default function WorkerPage() {
         createdAt: new Date(),
         spanishTrans: data.spanishMessage,
         actionSummary: `Supply: ${data.status} — ${data.message}`,
+        isSupervisorReply: true,
       }
       setMessages((prev) => [...prev, updateMessage])
     })
@@ -80,9 +82,9 @@ export default function WorkerPage() {
     }
   }, [workerId])
 
-  // Initialize Speech Recognition - language depends on EN/ES toggle
-  // EN mode: user speaks Spanish → supervisor receives English
-  // ES mode: user speaks English → supervisor receives Spanish
+  // Initialize Speech Recognition - language matches UI language
+  // EN mode (UI in English): user speaks English → supervisor receives Spanish
+  // ES mode (UI in Spanish): user speaks Spanish → supervisor receives English
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition =
@@ -95,12 +97,12 @@ export default function WorkerPage() {
       }
 
       const recognition = new SpeechRecognition()
-      recognition.lang = isSpanishMode ? 'en-US' : 'es-MX'
+      recognition.lang = isSpanishMode ? 'es-MX' : 'en-US'
       recognition.continuous = false
       recognition.interimResults = false
 
       recognition.onstart = () => {
-        console.log('[FLOW][Worker][Voice] Speech recognition started, listening for', isSpanishMode ? 'English' : 'Mexican Spanish')
+        console.log('[FLOW][Worker][Voice] Speech recognition started, listening for', isSpanishMode ? 'Mexican Spanish' : 'English')
         setIsRecording(true)
       }
 
@@ -178,7 +180,7 @@ export default function WorkerPage() {
                 urgency: data.urgency,
                 category: data.category,
                 contextNotes: data.contextNotes ?? undefined,
-                spokenLanguage: isSpanishMode ? 'en' : 'es',
+                spokenLanguage: isSpanishMode ? 'es' : 'en',
               }
             : msg
         )

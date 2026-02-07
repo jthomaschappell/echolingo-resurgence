@@ -13,6 +13,8 @@ export interface Message {
   contextNotes?: string
   /** When true, user spoke English → translation is Spanish. When false, user spoke Spanish → translation is English. */
   spokenLanguage?: 'en' | 'es'
+  /** When true, message came from supervisor via WhatsApp (external), not sent from this app. */
+  isSupervisorReply?: boolean
 }
 
 interface MessageBubbleProps {
@@ -32,7 +34,7 @@ function formatDate(d: Date | string): string {
 }
 
 export default function MessageBubble({ message, workerId }: MessageBubbleProps) {
-  const isSupervisorReply = 'actionSummary' in message && message.actionSummary
+  const isSupervisorReply = message.isSupervisorReply ?? (!!message.actionSummary && !!message.englishRaw)
 
   // Original spoken text and translation
   const spoken =
@@ -52,7 +54,21 @@ export default function MessageBubble({ message, workerId }: MessageBubbleProps)
   const sender = isSupervisorReply ? 'Supervisor' : (workerId || 'Worker')
 
   return (
-    <div className="mb-5 p-4 bg-white/90 rounded-xl border border-palette-golden/20 shadow-stripe">
+    <div
+      className={`mb-5 p-4 rounded-xl shadow-stripe ${
+        isSupervisorReply
+          ? 'bg-emerald-50/95 border-2 border-emerald-300'
+          : 'bg-white/90 border border-palette-golden/20'
+      }`}
+    >
+      {isSupervisorReply && (
+        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-emerald-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-600 text-white uppercase tracking-wide">
+            Supervisor
+          </span>
+          <span className="text-xs text-emerald-700/80">via WhatsApp</span>
+        </div>
+      )}
       {spoken && (
         <p className="text-stripe-dark text-base mb-2">
           <span className="text-stripe-muted text-sm font-medium uppercase tracking-wide">Original</span>
