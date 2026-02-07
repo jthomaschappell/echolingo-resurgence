@@ -14,7 +14,7 @@ export default function ConversationList({
   isLoading,
   workerId,
 }: ConversationListProps) {
-  const { t } = useLanguage()
+  const { t, isSpanishMode } = useLanguage()
   return (
     <div className="flex-1 overflow-y-auto px-6 py-6">
       {messages.length === 0 && (
@@ -37,7 +37,7 @@ export default function ConversationList({
           <div>
             <p className="text-stripe-dark text-base">
               <span className="font-semibold text-stripe-primary">{t.emptyStateGreeting}</span>{' '}
-              {t.emptyStateInstruction}
+              {isSpanishMode ? t.emptyStateInstructionEnglish : t.emptyStateInstruction}
             </p>
             <p className="text-stripe-muted text-sm mt-1">
               {t.emptyStateNote}

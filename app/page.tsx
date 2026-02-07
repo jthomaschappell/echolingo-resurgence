@@ -18,13 +18,14 @@ declare global {
 }
 
 export default function WorkerPage() {
-  const { t } = useLanguage()
+  const { t, isSpanishMode } = useLanguage()
   const [workerId, setWorkerId] = useState('worker-001')
   const [messages, setMessages] = useState<Message[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [socket, setSocket] = useState<Socket | null>(null)
   const [speechSupported, setSpeechSupported] = useState(true)
+  const [textInput, setTextInput] = useState('')
   const recognitionRef = useRef<any>(null)
 
   // Initialize Socket.io connection
@@ -63,6 +64,7 @@ export default function WorkerPage() {
       const updateMessage: Message = {
         id: `supply-${Date.now()}`,
         spanishRaw: data.spanishMessage,
+        englishRaw: data.message,
         urgency: 'normal',
         createdAt: new Date(),
         spanishTrans: data.spanishMessage,
@@ -78,7 +80,9 @@ export default function WorkerPage() {
     }
   }, [workerId])
 
-  // Initialize Speech Recognition
+  // Initialize Speech Recognition - language depends on EN/ES toggle
+  // EN mode: user speaks Spanish → supervisor receives English
+  // ES mode: user speaks English → supervisor receives Spanish
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition =
@@ -91,12 +95,12 @@ export default function WorkerPage() {
       }
 
       const recognition = new SpeechRecognition()
-      recognition.lang = 'es-MX' // Mexican Spanish
+      recognition.lang = isSpanishMode ? 'en-US' : 'es-MX'
       recognition.continuous = false
       recognition.interimResults = false
 
       recognition.onstart = () => {
-        console.log('[FLOW][Worker][Voice] Speech recognition started, listening for Mexican Spanish')
+        console.log('[FLOW][Worker][Voice] Speech recognition started, listening for', isSpanishMode ? 'English' : 'Mexican Spanish')
         setIsRecording(true)
       }
 
@@ -120,14 +124,14 @@ export default function WorkerPage() {
 
       recognitionRef.current = recognition
     }
-  }, [])
+  }, [isSpanishMode])
 
-  const handleVoiceInput = async (spanishText: string) => {
-    console.log('[FLOW][Worker] Voice input received, forwarding to API:', { workerId, spanishText })
-    // Optimistic UI update
+  const handleVoiceInput = async (spokenText: string) => {
+    console.log('[FLOW][Worker] Voice input received, forwarding to API:', { workerId, spokenText, isSpanishMode })
+    // Optimistic UI update - spanishRaw holds original for display in both modes
     const tempMessage: Message = {
       id: `temp-${Date.now()}`,
-      spanishRaw: spanishText,
+      spanishRaw: spokenText,
       urgency: 'normal',
       createdAt: new Date(),
     }
@@ -143,7 +147,8 @@ export default function WorkerPage() {
         },
         body: JSON.stringify({
           workerId,
-          spanishText,
+          spokenText,
+          isSpanishMode,
         }),
       })
 
@@ -167,11 +172,13 @@ export default function WorkerPage() {
             ? {
                 ...msg,
                 id: data.messageId,
+                spanishRaw: data.spanishRaw ?? msg.spanishRaw,
                 englishRaw: data.englishRaw,
                 englishFormatted: data.englishFormatted,
                 urgency: data.urgency,
                 category: data.category,
                 contextNotes: data.contextNotes ?? undefined,
+                spokenLanguage: isSpanishMode ? 'en' : 'es',
               }
             : msg
         )
@@ -184,6 +191,13 @@ export default function WorkerPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleTextSubmit = async () => {
+    const trimmed = textInput.trim()
+    if (!trimmed || isLoading) return
+    setTextInput('')
+    await handleVoiceInput(trimmed)
   }
 
   const handleMicrophoneClick = () => {
@@ -246,7 +260,29 @@ export default function WorkerPage() {
         <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-xl border border-palette-golden/30 overflow-hidden flex flex-col min-h-[200px] shadow-stripe">
           <ConversationList messages={messages} isLoading={isLoading} workerId={workerId} />
         </div>
-        <div className="py-6">
+        <div className="py-6 space-y-4">
+          {/* Text input + Send */}
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
+              placeholder={t.textInputPlaceholder}
+              disabled={isLoading}
+              className="flex-1 px-4 py-3 rounded-xl border border-palette-golden/40 bg-white/90 text-stripe-dark placeholder:text-stripe-muted focus:outline-none focus:ring-2 focus:ring-palette-golden/50 focus:border-palette-golden disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            <button
+              type="button"
+              onClick={handleTextSubmit}
+              disabled={!textInput.trim() || isLoading}
+              className="px-6 py-3 rounded-xl bg-stripe-primary text-white font-semibold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            >
+              {t.sendButton}
+            </button>
+          </div>
+          {/* Voice input */}
+          <p className="text-stripe-muted text-sm text-center">{t.orUseVoice}</p>
           <MicrophoneButton
             isRecording={isRecording}
             onClick={handleMicrophoneClick}

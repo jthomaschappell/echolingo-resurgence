@@ -15,12 +15,18 @@ export const translations = {
 
     // Conversation list
     emptyStateGreeting: 'Hello!',
-    emptyStateInstruction: 'Tap the microphone and speak in Spanish.',
+    emptyStateInstruction: 'Type or tap the microphone to speak in Spanish.',
+    emptyStateInstructionEnglish: 'Type or tap the microphone to speak in English.',
     emptyStateNote: 'Your message will be translated and sent to your supervisor.',
     processing: 'Processing...',
 
     // Message bubble
     sentToSupervisor: 'Sent to supervisor',
+
+    // Message input
+    textInputPlaceholder: 'Type your message...',
+    sendButton: 'Send',
+    orUseVoice: 'or tap to speak',
 
     // Microphone button
     recording: 'Recording...',
@@ -49,12 +55,18 @@ export const translations = {
 
     // Conversation list
     emptyStateGreeting: '¡Hola!',
-    emptyStateInstruction: 'Pulsa el micrófono y habla en español.',
+    emptyStateInstruction: 'Escribe o pulsa el micrófono para hablar en español.',
+    emptyStateInstructionEnglish: 'Escribe o pulsa el micrófono para hablar en inglés.',
     emptyStateNote: 'Tu mensaje se traducirá y se enviará a tu supervisor.',
     processing: 'Procesando...',
 
     // Message bubble
     sentToSupervisor: 'Enviado al supervisor',
+
+    // Message input
+    textInputPlaceholder: 'Escribe tu mensaje...',
+    sendButton: 'Enviar',
+    orUseVoice: 'o toca para hablar',
 
     // Microphone button
     recording: 'Grabando...',

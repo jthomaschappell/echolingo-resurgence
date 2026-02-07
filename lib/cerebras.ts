@@ -13,7 +13,7 @@ export async function translateSpanishToEnglish(spanishText: string): Promise<st
       messages: [
         {
           role: 'system',
-          content: 'You are a professional translator. Translate the following Mexican Spanish construction site communication into clear, professional English suitable for a construction supervisor.',
+          content: 'You are a professional translator. Translate the following Mexican Spanish construction site communication into clear, professional English suitable for a construction supervisor. Output ONLY the translation—no explanations, notes, or any other text.',
         },
         {
           role: 'user',
@@ -41,7 +41,7 @@ export async function translateEnglishToSpanish(englishText: string): Promise<st
       messages: [
         {
           role: 'system',
-          content: 'You are a professional translator. Translate the following English construction site communication into clear, colloquial Mexican Spanish suitable for a construction worker.',
+          content: 'You are a professional translator. Translate the following English construction site communication into clear, colloquial Mexican Spanish suitable for a construction worker. Output ONLY the translation—no explanations, notes, or any other text.',
         },
         {
           role: 'user',

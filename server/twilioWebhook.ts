@@ -96,6 +96,7 @@ export async function handleTwilioWebhook(req: Request, res: Response) {
     console.log('[FLOW][TwilioWebhook] Emitting supervisor-reply via Socket.io to room:', workerRoom)
     io.to(workerRoom).emit('supervisor-reply', {
       messageId: originalMessage.id,
+      englishRaw: englishText,
       spanishTrans,
       actionSummary,
     })

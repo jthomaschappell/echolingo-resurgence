@@ -84,6 +84,82 @@ Respond in JSON format:
   }
 }
 
+export interface MessageAnalysisSpanish {
+  category: 'delay_report' | 'clarification' | 'completion' | 'safety' | 'material_need'
+  urgency: 'normal' | 'high'
+  spanishFormatted: string
+  contextNotes?: string
+}
+
+export async function analyzeAndReformatMessageEnglishToSpanish(
+  englishText: string,
+  spanishRaw: string
+): Promise<MessageAnalysisSpanish> {
+  const urgencyKeywords = /emergency|danger|accident|injury|urgent/i
+  const hasUrgency = urgencyKeywords.test(englishText)
+  console.log('[FLOW][Claude] analyzeAndReformatMessageEnglishToSpanish called, hasUrgency:', hasUrgency)
+
+  try {
+    console.log('[FLOW][Claude] Calling Claude API for English→Spanish analysis...')
+    const response = await claudeClient.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1000,
+      messages: [
+        {
+          role: 'user',
+          content: `Analyze this construction site communication and provide:
+1. Category: one of [delay_report, clarification, completion, safety, material_need]
+2. A professionally formatted Spanish message suitable for a construction supervisor (Mexican Spanish)
+3. Optional contextNotes: brief thoughts about construction context, ambiguity, or relevant details (omit if none)
+
+Original English: "${englishText}"
+Spanish Translation: "${spanishRaw}"
+
+Respond in JSON format:
+{
+  "category": "delay_report|clarification|completion|safety|material_need",
+  "spanishFormatted": "Professional Spanish message formatted for supervisor communication",
+  "contextNotes": "Optional brief note about context, ambiguity, or construction-specific details"
+}`,
+        },
+      ],
+    })
+
+    const content = response.content[0]
+    if (content.type === 'text') {
+      const text = content.text.trim()
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        const result: MessageAnalysisSpanish = {
+          category: parsed.category || 'clarification',
+          urgency: hasUrgency ? 'high' : 'normal',
+          spanishFormatted: parsed.spanishFormatted || spanishRaw,
+          contextNotes: parsed.contextNotes?.trim() || undefined,
+        }
+        console.log('[FLOW][Claude] analyzeAndReformatMessageEnglishToSpanish done:', result)
+        return result
+      }
+    }
+
+    console.log('[FLOW][Claude] analyzeAndReformatMessageEnglishToSpanish using fallback (no JSON parsed)')
+    return {
+      category: hasUrgency ? 'safety' : 'clarification',
+      urgency: hasUrgency ? 'high' : 'normal',
+      spanishFormatted: spanishRaw,
+      contextNotes: undefined,
+    }
+  } catch (error) {
+    console.error('[FLOW][Claude] analyzeAndReformatMessageEnglishToSpanish error (using fallback):', error)
+    return {
+      category: hasUrgency ? 'safety' : 'clarification',
+      urgency: hasUrgency ? 'high' : 'normal',
+      spanishFormatted: spanishRaw,
+      contextNotes: undefined,
+    }
+  }
+}
+
 export async function extractActionItems(englishText: string): Promise<string> {
   try {
     console.log('[FLOW][Claude] extractActionItems called, input:', englishText?.slice(0, 80) + '...')

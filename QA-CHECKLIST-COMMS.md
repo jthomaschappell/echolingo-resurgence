@@ -30,16 +30,18 @@ Worker (Web) → Voice → Cerebras → Claude → PostgreSQL
 | # | Test | Expected | Pass |
 |---|------|----------|------|
 | 1 | Click mic; grant permission when prompted | Mic permission dialog appears | ☐ |
-| 2 | Speak in Mexican Spanish (e.g. "Necesito más cemento") | Spanish transcript appears in UI immediately after stopping | ☐ |
+| 2 | **EN mode** (toggle left): Speak in Mexican Spanish (e.g. "Necesito más cemento") | Spanish transcript appears in UI immediately after stopping | ☐ |
+| 2b | **ES mode** (toggle right): Speak in English (e.g. "I need more cement") | English transcript appears in UI immediately after stopping | ☐ |
 | 3 | Verify transcript accuracy | Text matches what was spoken | ☐ |
 | 4 | No speech / very short utterance | Handle gracefully; no crash | ☐ |
 
-### 1.2 Cerebras translation (Spanish → English)
+### 1.2 Cerebras translation (bidirectional)
 
 | # | Test | Expected | Pass |
 |---|------|----------|------|
-| 5 | After transcript, during processing | "Cargando..." loading state visible | ☐ |
-| 6 | Processing completes | English translation appears below Spanish in message bubble | ☐ |
+| 5 | After transcript, during processing | Loading state visible | ☐ |
+| 6 | **EN mode**: Processing completes after speaking Spanish | English translation appears below Spanish in message bubble | ☐ |
+| 6b | **ES mode**: Processing completes after speaking English | Spanish translation appears below English in message bubble | ☐ |
 | 7 | Technical phrase (e.g. "tubo de PVC") | Reasonable English translation | ☐ |
 | 8 | Cerebras API down or key invalid | User-friendly error; no crash | ☐ |
 
@@ -70,7 +72,8 @@ Worker (Web) → Voice → Cerebras → Claude → PostgreSQL
 | # | Test | Expected | Pass |
 |---|------|----------|------|
 | 15 | Worker sends message | Supervisor receives WhatsApp within ~30s | ☐ |
-| 16 | Message content | Formatted English (Claude `englishFormatted`), not raw translation | ☐ |
+| 16 | **EN mode**: Worker spoke Spanish | Supervisor receives formatted English | ☐ |
+| 16b | **ES mode**: Worker spoke English | Supervisor receives formatted Spanish | ☐ |
 | 17 | Multiple messages in sequence | Each delivered in order | ☐ |
 | 18 | Urgent message | Clearly marked for high urgency in WhatsApp | ☐ |
 
