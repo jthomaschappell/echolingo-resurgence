@@ -6,9 +6,12 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[FLOW][API] POST /api/messages received')
     const { workerId, spanishText } = await request.json()
+    console.log('[FLOW][API] Request body:', { workerId, spanishText: spanishText?.slice(0, 80) + '...' })
 
     if (!workerId || !spanishText) {
+      console.log('[FLOW][API] Validation failed: missing workerId or spanishText')
       return NextResponse.json(
         { error: 'Missing workerId or spanishText' },
         { status: 400 }
@@ -16,12 +19,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 1: Translate Spanish to English via Cerebras
+    console.log('[FLOW][API] Step 1: Calling Cerebras for Spanish→English translation...')
     const englishRaw = await translateSpanishToEnglish(spanishText)
+    console.log('[FLOW][API] Cerebras translation complete:', { englishRaw: englishRaw?.slice(0, 80) + '...' })
 
     // Step 2: Analyze and reformat via Claude
+    console.log('[FLOW][API] Step 2: Calling Claude for analysis and reformatting...')
     const analysis = await analyzeAndReformatMessage(spanishText, englishRaw)
+    console.log('[FLOW][API] Claude analysis complete:', {
+      category: analysis.category,
+      urgency: analysis.urgency,
+      englishFormatted: analysis.englishFormatted?.slice(0, 80) + '...',
+    })
 
     // Step 3: Store in database
+    console.log('[FLOW][API] Step 3: Storing in PostgreSQL (Supabase)...')
     const { data: message, error: insertError } = await supabase
       .from('Message')
       .insert({
@@ -36,33 +48,40 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError || !message) {
-      console.error('Supabase insert error:', insertError)
+      console.error('[FLOW][API] PostgreSQL insert error:', insertError)
       return NextResponse.json(
         { error: 'Failed to save message' },
         { status: 500 }
       )
     }
+    console.log('[FLOW][API] PostgreSQL insert success, messageId:', message.id)
 
     // Step 4: Send to supervisor via WhatsApp
     const supervisorWhatsApp = process.env.SUPERVISOR_WHATSAPP
     if (supervisorWhatsApp) {
       try {
+        console.log('[FLOW][API] Step 4: Sending to Supervisor via WhatsApp...', { to: supervisorWhatsApp })
         const twilioSid = await sendWhatsAppMessage(
           supervisorWhatsApp,
           analysis.englishFormatted
         )
+        console.log('[FLOW][API] WhatsApp sent successfully, twilioSid:', twilioSid)
 
         // Update message with Twilio SID for reply threading
         await supabase
           .from('Message')
           .update({ twilioSid })
           .eq('id', message.id)
+        console.log('[FLOW][API] Updated message with twilioSid for reply threading')
       } catch (error) {
-        console.error('Failed to send WhatsApp, but message saved:', error)
+        console.error('[FLOW][API] Failed to send WhatsApp, but message saved:', error)
         // Continue even if WhatsApp fails - message is saved
       }
+    } else {
+      console.log('[FLOW][API] SUPERVISOR_WHATSAPP not set, skipping WhatsApp send')
     }
 
+    console.log('[FLOW][API] Request complete, returning response')
     return NextResponse.json({
       messageId: message.id,
       englishRaw,
@@ -71,7 +90,7 @@ export async function POST(request: NextRequest) {
       urgency: analysis.urgency,
     })
   } catch (error) {
-    console.error('API error:', error)
+    console.error('[FLOW][API] Unhandled error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

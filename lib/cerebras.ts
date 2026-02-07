@@ -7,6 +7,7 @@ const cerebrasClient = new OpenAI({
 
 export async function translateSpanishToEnglish(spanishText: string): Promise<string> {
   try {
+    console.log('[FLOW][Cerebras] translateSpanishToEnglish called, input:', spanishText?.slice(0, 80) + '...')
     const response = await cerebrasClient.chat.completions.create({
       model: 'llama-3.1-8b-instruct',
       messages: [
@@ -23,15 +24,18 @@ export async function translateSpanishToEnglish(spanishText: string): Promise<st
       max_tokens: 500,
     })
 
-    return response.choices[0]?.message?.content?.trim() || spanishText
+    const result = response.choices[0]?.message?.content?.trim() || spanishText
+    console.log('[FLOW][Cerebras] translateSpanishToEnglish done, output:', result?.slice(0, 80) + '...')
+    return result
   } catch (error) {
-    console.error('Cerebras translation error:', error)
+    console.error('[FLOW][Cerebras] translateSpanishToEnglish error:', error)
     throw new Error('Translation failed')
   }
 }
 
 export async function translateEnglishToSpanish(englishText: string): Promise<string> {
   try {
+    console.log('[FLOW][Cerebras] translateEnglishToSpanish called, input:', englishText?.slice(0, 80) + '...')
     const response = await cerebrasClient.chat.completions.create({
       model: 'llama-3.1-8b-instruct',
       messages: [
@@ -48,9 +52,11 @@ export async function translateEnglishToSpanish(englishText: string): Promise<st
       max_tokens: 500,
     })
 
-    return response.choices[0]?.message?.content?.trim() || englishText
+    const result = response.choices[0]?.message?.content?.trim() || englishText
+    console.log('[FLOW][Cerebras] translateEnglishToSpanish done, output:', result?.slice(0, 80) + '...')
+    return result
   } catch (error) {
-    console.error('Cerebras translation error:', error)
+    console.error('[FLOW][Cerebras] translateEnglishToSpanish error:', error)
     throw new Error('Translation failed')
   }
 }

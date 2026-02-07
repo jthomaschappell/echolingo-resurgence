@@ -19,15 +19,16 @@ app.use(express.urlencoded({ extended: true }))
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id)
+  console.log('[FLOW][Socket.io] Client connected:', socket.id)
 
   socket.on('join-worker-room', ({ workerId }: { workerId: string }) => {
-    socket.join(`worker:${workerId}`)
-    console.log(`Worker ${workerId} joined room`)
+    const room = `worker:${workerId}`
+    socket.join(room)
+    console.log('[FLOW][Socket.io] Worker', workerId, 'joined room:', room, '(socket:', socket.id, ')')
   })
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id)
+    console.log('[FLOW][Socket.io] Client disconnected:', socket.id)
   })
 })
 
@@ -40,5 +41,5 @@ app.post('/webhook/twilio', handleTwilioWebhook)
 const PORT = process.env.SOCKET_SERVER_PORT || 3001
 
 httpServer.listen(PORT, () => {
-  console.log(`Socket.io server running on port ${PORT}`)
+  console.log('[FLOW][Socket.io] Server running on port', PORT, '(Twilio webhook at /webhook/twilio)')
 })

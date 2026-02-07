@@ -6,10 +6,13 @@ import { supabase } from '../lib/supabase'
 
 export async function handleTwilioWebhook(req: Request, res: Response) {
   try {
+    console.log('[FLOW][TwilioWebhook] Incoming webhook received')
     const io: SocketIOServer = req.app.locals.io
     const { From, Body, MessageSid, AccountSid } = req.body
+    console.log('[FLOW][TwilioWebhook] Request body:', { From, Body: Body?.slice(0, 80) + '...', MessageSid })
 
     // Find the original message - try by Twilio SID first, then by supervisor number
+    console.log('[FLOW][TwilioWebhook] Querying PostgreSQL for original message by twilioSid:', MessageSid)
     let { data: originalMessage } = await supabase
       .from('Message')
       .select()
@@ -20,6 +23,7 @@ export async function handleTwilioWebhook(req: Request, res: Response) {
 
     // If not found by SID, get the most recent message (supervisor is replying to latest)
     if (!originalMessage) {
+      console.log('[FLOW][TwilioWebhook] Not found by SID, querying PostgreSQL for latest message')
       const { data: latest } = await supabase
         .from('Message')
         .select()
@@ -30,19 +34,26 @@ export async function handleTwilioWebhook(req: Request, res: Response) {
     }
 
     if (!originalMessage) {
-      console.error('Original message not found for Twilio webhook')
+      console.error('[FLOW][TwilioWebhook] Original message not found')
       return res.status(404).send('Message not found')
     }
+    console.log('[FLOW][TwilioWebhook] Found original message:', { id: originalMessage.id, workerId: originalMessage.workerId })
 
     const englishText = Body.trim()
+    console.log('[FLOW][TwilioWebhook] Supervisor reply (English):', englishText?.slice(0, 80) + '...')
 
     // Translate English to Spanish
+    console.log('[FLOW][TwilioWebhook] Calling Cerebras for English→Spanish translation...')
     const spanishTrans = await translateEnglishToSpanish(englishText)
+    console.log('[FLOW][TwilioWebhook] Cerebras translation done')
 
     // Extract action items via Claude
+    console.log('[FLOW][TwilioWebhook] Calling Claude for action item extraction...')
     const actionSummary = await extractActionItems(englishText)
+    console.log('[FLOW][TwilioWebhook] Claude extraction done')
 
     // Store supervisor reply
+    console.log('[FLOW][TwilioWebhook] Storing SupervisorReply in PostgreSQL...')
     const { error: replyError } = await supabase.from('SupervisorReply').insert({
       messageId: originalMessage.id,
       englishRaw: englishText,
@@ -51,24 +62,26 @@ export async function handleTwilioWebhook(req: Request, res: Response) {
     })
 
     if (replyError) {
-      console.error('Failed to store supervisor reply:', replyError)
+      console.error('[FLOW][TwilioWebhook] PostgreSQL insert SupervisorReply failed:', replyError)
       return res.status(500).send('Error storing reply')
     }
+    console.log('[FLOW][TwilioWebhook] SupervisorReply stored in PostgreSQL')
 
     // Emit to worker's room via Socket.io
     const workerRoom = `worker:${originalMessage.workerId}`
+    console.log('[FLOW][TwilioWebhook] Emitting supervisor-reply via Socket.io to room:', workerRoom)
     io.to(workerRoom).emit('supervisor-reply', {
       messageId: originalMessage.id,
       spanishTrans,
       actionSummary,
     })
 
-    console.log(`Supervisor reply sent to worker ${originalMessage.workerId}`)
+    console.log('[FLOW][TwilioWebhook] Supervisor reply delivered to worker', originalMessage.workerId, 'via Socket.io')
 
     // Respond to Twilio (required)
     res.type('text/xml').send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>')
   } catch (error) {
-    console.error('Twilio webhook error:', error)
+    console.error('[FLOW][TwilioWebhook] Unhandled error:', error)
     res.status(500).send('Error processing webhook')
   }
 }
