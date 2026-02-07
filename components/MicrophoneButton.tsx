@@ -15,10 +15,10 @@ export default function MicrophoneButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full bg-primary-orange text-white py-4 px-6 rounded-lg font-semibold text-base flex items-center justify-center gap-2 transition-all ${
+      className={`w-full text-white py-4 px-6 rounded-xl font-semibold text-base flex items-center justify-center gap-3 transition-all shadow-stripe-lg ${
         isRecording
-          ? 'animate-pulse bg-opacity-90'
-          : 'hover:bg-opacity-90 active:bg-opacity-80'
+          ? 'bg-stripe-primary animate-pulse'
+          : 'bg-stripe-primary hover:opacity-95 hover:shadow-lg active:scale-[0.99]'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <svg
@@ -27,7 +27,7 @@ export default function MicrophoneButton({
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="text-white"
+        className="text-white flex-shrink-0"
       >
         {isRecording ? (
           <path
@@ -49,7 +49,12 @@ export default function MicrophoneButton({
           fill="currentColor"
         />
       </svg>
-      <span>{isRecording ? 'Grabando...' : 'Pulsa para hablar'}</span>
+      <span>{isRecording ? 'Recording...' : 'Tap to speak'}</span>
+      {!isRecording && !disabled && (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
+          <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
     </button>
   )
 }

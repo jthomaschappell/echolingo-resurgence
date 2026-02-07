@@ -182,21 +182,52 @@ export default function WorkerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-grey flex flex-col">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Language-themed background image */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=1920&q=80')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      {/* Overlay for readability - warm cream tint from palette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, rgba(253, 248, 240, 0.92) 0%, rgba(253, 248, 240, 0.88) 50%, rgba(243, 234, 220, 0.92) 100%)',
+        }}
+      />
+
       <Header />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10 max-w-4xl mx-auto w-full px-6">
+        {/* Hero section */}
+        <div className="py-12">
+          <p className="text-stripe-muted text-sm font-medium mb-2">
+            Real-time construction communication
+          </p>
+          <h1 className="text-stripe-dark text-3xl md:text-4xl font-bold tracking-tight leading-tight mb-4">
+            Bridge the language gap
+            <span className="text-palette-orange"> between workers and supervisors.</span>
+          </h1>
+          <p className="text-stripe-muted text-lg max-w-2xl">
+            Accept voice input, get instant translation, and share actionable summaries—from the first message to the last.
+          </p>
+        </div>
+
         <ControlPanel workerId={workerId} onWorkerIdChange={setWorkerId} />
         {!speechSupported && (
-          <div className="mx-4 mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-            <p className="text-yellow-800 text-sm">
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-amber-800 text-sm">
               ⚠️ El reconocimiento de voz no está disponible en este navegador. Por favor usa Chrome o Edge.
             </p>
           </div>
         )}
-        <div className="flex-1 bg-cream rounded-t-lg mx-4 mb-4 overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-xl border border-palette-golden/30 overflow-hidden flex flex-col min-h-[200px] shadow-stripe">
           <ConversationList messages={messages} isLoading={isLoading} />
         </div>
-        <div className="px-4 pb-4">
+        <div className="py-6">
           <MicrophoneButton
             isRecording={isRecording}
             onClick={handleMicrophoneClick}

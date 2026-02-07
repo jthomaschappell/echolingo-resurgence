@@ -10,16 +10,18 @@ export default function ControlPanel({
   onWorkerIdChange,
 }: ControlPanelProps) {
   return (
-    <div className="bg-cream rounded-lg p-4 mx-4 mb-4">
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-palette-golden/30 shadow-stripe">
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
-          <label className="text-xs text-gray-600 mb-1 block">Trabajador ID</label>
+          <label className="text-xs font-medium text-stripe-muted mb-2 block uppercase tracking-wider">
+            Worker ID
+          </label>
           <input
             type="text"
             value={workerId}
             onChange={(e) => onWorkerIdChange?.(e.target.value)}
-            className="w-full px-3 py-2 rounded border border-gray-300 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-primary-orange"
-            placeholder="ID del trabajador"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 text-stripe-dark bg-white focus:outline-none focus:ring-2 focus:ring-stripe-primary focus:border-transparent transition-shadow placeholder:text-stripe-muted"
+            placeholder="e.g. worker-001"
           />
         </div>
       </div>
