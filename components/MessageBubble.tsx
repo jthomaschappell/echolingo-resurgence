@@ -10,6 +10,8 @@ export interface Message {
   urgency: 'normal' | 'high'
   category?: string
   createdAt: Date | string
+  spanishTrans?: string
+  actionSummary?: string
 }
 
 interface MessageBubbleProps {
@@ -17,7 +19,7 @@ interface MessageBubbleProps {
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
-  const isSupervisorReply = 'actionSummary' in message && message.actionSummary
+  const isSupervisorReply = !!message.actionSummary
 
   return (
     <div className="mb-4">
@@ -44,11 +46,11 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       {isSupervisorReply && (
         <div className="mt-2 p-3 bg-green-100 rounded-lg border-l-4 border-green-500">
           <p className="text-green-800 text-sm font-medium">
-            {(message as any).actionSummary}
+            {message.actionSummary}
           </p>
-          {(message as any).spanishTrans && (
+          {message.spanishTrans && (
             <p className="text-green-700 text-xs mt-1">
-              {(message as any).spanishTrans}
+              {message.spanishTrans}
             </p>
           )}
         </div>

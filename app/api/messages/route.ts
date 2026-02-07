@@ -3,6 +3,7 @@ import { translateSpanishToEnglish } from '@/lib/cerebras'
 import { analyzeAndReformatMessage } from '@/lib/claude'
 import { sendWhatsAppMessage } from '@/lib/twilio'
 import { supabase } from '@/lib/supabase'
+import { runSupplyAgent } from '@/lib/supply-agent/graph'
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,6 +82,39 @@ export async function POST(request: NextRequest) {
       console.log('[FLOW][API] SUPERVISOR_WHATSAPP not set, skipping WhatsApp send')
     }
 
+    // Step 5: Run supply agent if material need detected
+    let supplyResult = null
+    if (analysis.category === 'material_need') {
+      console.log('[FLOW][API] Step 5: Material need detected, running supply agent...')
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 30000)
+      try {
+        supplyResult = await runSupplyAgent({
+          spanishText,
+          englishText: englishRaw,
+          workerId,
+          messageId: message.id,
+        })
+        console.log('[FLOW][API] Supply agent complete, isSupply:', supplyResult.isSupplyRequest)
+
+        // Send supply request to supervisor via WhatsApp
+        if (supplyResult.isSupplyRequest && supplyResult.whatsappMessage && supervisorWhatsApp) {
+          await sendWhatsAppMessage(supervisorWhatsApp, supplyResult.whatsappMessage)
+          console.log('[FLOW][API] Supply request sent to supervisor via WhatsApp')
+        }
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          console.error('[FLOW][API] Supply agent timed out after 30s')
+        } else {
+          console.error('[FLOW][API] Supply agent error:', err)
+        }
+      } finally {
+        clearTimeout(timeout)
+      }
+    } else {
+      console.log('[FLOW][API] Step 5: Category is', analysis.category, '— skipping supply agent')
+    }
+
     console.log('[FLOW][API] Request complete, returning response')
     return NextResponse.json({
       messageId: message.id,
@@ -88,6 +122,7 @@ export async function POST(request: NextRequest) {
       englishFormatted: analysis.englishFormatted,
       category: analysis.category,
       urgency: analysis.urgency,
+      supplyRequestId: supplyResult?.supplyRequestId ?? null,
     })
   } catch (error) {
     console.error('[FLOW][API] Unhandled error:', error)

@@ -53,6 +53,22 @@ export default function WorkerPage() {
       setMessages((prev) => [...prev, replyMessage])
     })
 
+    newSocket.on('supply-request-update', (data: { requestId: string; status: string; message: string; spanishMessage: string }) => {
+      console.log('[FLOW][Worker] Received supply-request-update via Socket.io:', {
+        requestId: data.requestId,
+        status: data.status,
+      })
+      const updateMessage: Message = {
+        id: `supply-${Date.now()}`,
+        spanishRaw: data.spanishMessage,
+        urgency: 'normal',
+        createdAt: new Date(),
+        spanishTrans: data.spanishMessage,
+        actionSummary: `Supply: ${data.status} — ${data.message}`,
+      }
+      setMessages((prev) => [...prev, updateMessage])
+    })
+
     setSocket(newSocket)
 
     return () => {

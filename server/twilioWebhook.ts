@@ -1,15 +1,39 @@
 import { Request, Response } from 'express'
 import { Server as SocketIOServer } from 'socket.io'
+import twilio from 'twilio'
 import { translateEnglishToSpanish } from '../lib/cerebras'
 import { extractActionItems } from '../lib/claude'
 import { supabase } from '../lib/supabase'
+import { handleApprovalCommand } from './supply/approvalHandler'
 
 export async function handleTwilioWebhook(req: Request, res: Response) {
   try {
     console.log('[FLOW][TwilioWebhook] Incoming webhook received')
     const io: SocketIOServer = req.app.locals.io
+
+    // Twilio signature validation
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    const webhookUrl = process.env.TWILIO_WEBHOOK_URL
+    if (authToken && webhookUrl) {
+      const signature = req.headers['x-twilio-signature'] as string
+      const valid = twilio.validateRequest(authToken, signature, webhookUrl, req.body)
+      if (!valid) {
+        console.error('[FLOW][TwilioWebhook] Invalid Twilio signature')
+        return res.status(403).send('Forbidden')
+      }
+      console.log('[FLOW][TwilioWebhook] Twilio signature validated')
+    }
+
     const { From, Body, MessageSid, AccountSid } = req.body
     console.log('[FLOW][TwilioWebhook] Request body:', { From, Body: Body?.slice(0, 80) + '...', MessageSid })
+
+    // Check for supply approval commands (APPROVE, MODIFY, REJECT, ASK)
+    const approvalResult = await handleApprovalCommand(Body.trim(), io)
+    if (approvalResult.handled) {
+      console.log('[FLOW][TwilioWebhook] Supply approval command handled:', approvalResult.response)
+      res.type('text/xml').send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>')
+      return
+    }
 
     // Find the original message - try by Twilio SID first, then by supervisor number
     console.log('[FLOW][TwilioWebhook] Querying PostgreSQL for original message by twilioSid:', MessageSid)
