@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Header from '@/components/Header'
+import { useLanguage } from '@/context/LanguageContext'
 import ControlPanel from '@/components/ControlPanel'
 import ConversationList from '@/components/ConversationList'
 import MicrophoneButton from '@/components/MicrophoneButton'
@@ -17,6 +18,7 @@ declare global {
 }
 
 export default function WorkerPage() {
+  const { t } = useLanguage()
   const [workerId, setWorkerId] = useState('worker-001')
   const [messages, setMessages] = useState<Message[]>([])
   const [isRecording, setIsRecording] = useState(false)
@@ -161,7 +163,7 @@ export default function WorkerPage() {
       console.error('[FLOW][Worker] Error sending message:', error)
       // Remove the temporary message on error
       setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id))
-      alert('Error al enviar mensaje. Por favor intenta de nuevo.')
+      alert(t.sendError)
     } finally {
       setIsLoading(false)
     }
@@ -205,14 +207,14 @@ export default function WorkerPage() {
         {/* Hero section */}
         <div className="py-12">
           <p className="text-stripe-muted text-sm font-medium mb-2">
-            Real-time construction communication
+            {t.heroTagline}
           </p>
           <h1 className="text-stripe-dark text-3xl md:text-4xl font-bold tracking-tight leading-tight mb-4">
-            Bridge the language gap
-            <span className="text-palette-orange"> between workers and supervisors.</span>
+            {t.heroTitle}
+            <span className="text-palette-orange">{t.heroTitleHighlight}</span>
           </h1>
           <p className="text-stripe-muted text-lg max-w-2xl">
-            Accept voice input, get instant translation, and share actionable summaries—from the first message to the last.
+            {t.heroDescription}
           </p>
         </div>
 
@@ -220,7 +222,7 @@ export default function WorkerPage() {
         {!speechSupported && (
           <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
             <p className="text-amber-800 text-sm">
-              ⚠️ El reconocimiento de voz no está disponible en este navegador. Por favor usa Chrome o Edge.
+              ⚠️ {t.speechNotSupported}
             </p>
           </div>
         )}

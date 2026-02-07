@@ -1,6 +1,10 @@
 'use client'
 
+import { useLanguage } from '@/context/LanguageContext'
+
 export default function Header() {
+  const { t } = useLanguage()
+
   return (
     <header className="w-full bg-white/95 backdrop-blur-sm border-b border-palette-golden/20 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -25,13 +29,7 @@ export default function Header() {
       </div>
       <div className="flex items-center gap-3">
         <button className="text-stripe-orange font-medium text-sm hover:opacity-80 transition-opacity">
-          Sign in
-        </button>
-        <button className="bg-stripe-primary text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-95 transition-opacity flex items-center gap-1">
-          Contact sales
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          {t.signIn}
         </button>
       </div>
     </header>

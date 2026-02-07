@@ -1,5 +1,6 @@
 'use client'
 
+import { useLanguage } from '@/context/LanguageContext'
 import MessageBubble, { Message } from './MessageBubble'
 
 interface ConversationListProps {
@@ -11,6 +12,7 @@ export default function ConversationList({
   messages,
   isLoading,
 }: ConversationListProps) {
+  const { t } = useLanguage()
   return (
     <div className="flex-1 overflow-y-auto px-6 py-6">
       {messages.length === 0 && (
@@ -32,11 +34,11 @@ export default function ConversationList({
           </div>
           <div>
             <p className="text-stripe-dark text-base">
-              <span className="font-semibold text-stripe-primary">¡Hola!</span>{' '}
-              Pulsa el micrófono y habla en español.
+              <span className="font-semibold text-stripe-primary">{t.emptyStateGreeting}</span>{' '}
+              {t.emptyStateInstruction}
             </p>
             <p className="text-stripe-muted text-sm mt-1">
-              Your message will be translated and sent to your supervisor.
+              {t.emptyStateNote}
             </p>
           </div>
         </div>
@@ -47,7 +49,7 @@ export default function ConversationList({
       {isLoading && (
         <div className="flex items-center gap-3 mt-4 p-4 bg-white/90 rounded-xl border border-palette-golden/20">
           <div className="w-8 h-8 rounded-full border-2 border-stripe-primary/30 border-t-stripe-primary animate-spin" />
-          <span className="text-stripe-muted text-sm font-medium">Processing...</span>
+          <span className="text-stripe-muted text-sm font-medium">{t.processing}</span>
         </div>
       )}
     </div>

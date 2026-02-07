@@ -1,5 +1,6 @@
 'use client'
 
+import { useLanguage } from '@/context/LanguageContext'
 import UrgencyBadge from './UrgencyBadge'
 
 export interface Message {
@@ -17,6 +18,7 @@ interface MessageBubbleProps {
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
+  const { t } = useLanguage()
   const isSupervisorReply = 'actionSummary' in message && message.actionSummary
 
   return (
@@ -58,7 +60,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
           </svg>
-          Sent to supervisor
+          {t.sentToSupervisor}
         </div>
       )}
     </div>
