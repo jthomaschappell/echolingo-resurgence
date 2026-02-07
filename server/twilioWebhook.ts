@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { Server as SocketIOServer } from 'socket.io'
 import { translateEnglishToSpanish } from '../lib/cerebras'
 import { extractActionItems } from '../lib/claude'
-import { prisma } from '../lib/prisma'
+import { supabase } from '../lib/supabase'
 
 export async function handleTwilioWebhook(req: Request, res: Response) {
   try {
@@ -10,22 +10,23 @@ export async function handleTwilioWebhook(req: Request, res: Response) {
     const { From, Body, MessageSid, AccountSid } = req.body
 
     // Find the original message - try by Twilio SID first, then by supervisor number
-    let originalMessage = await prisma.message.findFirst({
-      where: {
-        twilioSid: MessageSid,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    let { data: originalMessage } = await supabase
+      .from('Message')
+      .select()
+      .eq('twilioSid', MessageSid)
+      .order('createdAt', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     // If not found by SID, get the most recent message (supervisor is replying to latest)
     if (!originalMessage) {
-      originalMessage = await prisma.message.findFirst({
-        orderBy: {
-          createdAt: 'desc',
-        },
-      })
+      const { data: latest } = await supabase
+        .from('Message')
+        .select()
+        .order('createdAt', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      originalMessage = latest
     }
 
     if (!originalMessage) {
@@ -42,14 +43,17 @@ export async function handleTwilioWebhook(req: Request, res: Response) {
     const actionSummary = await extractActionItems(englishText)
 
     // Store supervisor reply
-    const reply = await prisma.supervisorReply.create({
-      data: {
-        messageId: originalMessage.id,
-        englishRaw: englishText,
-        spanishTrans,
-        actionSummary,
-      },
+    const { error: replyError } = await supabase.from('SupervisorReply').insert({
+      messageId: originalMessage.id,
+      englishRaw: englishText,
+      spanishTrans,
+      actionSummary,
     })
+
+    if (replyError) {
+      console.error('Failed to store supervisor reply:', replyError)
+      return res.status(500).send('Error storing reply')
+    }
 
     // Emit to worker's room via Socket.io
     const workerRoom = `worker:${originalMessage.workerId}`

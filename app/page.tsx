@@ -28,14 +28,21 @@ export default function WorkerPage() {
   // Initialize Socket.io connection
   useEffect(() => {
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3001'
+    console.log('[FLOW][Worker] Connecting to Socket.io server:', socketUrl)
     const newSocket = io(socketUrl)
     
     newSocket.on('connect', () => {
-      console.log('Connected to Socket.io server')
+      console.log('[FLOW][Worker] Socket.io connected successfully, socketId:', newSocket.id)
+      console.log('[FLOW][Worker] Joining worker room:', workerId)
       newSocket.emit('join-worker-room', { workerId })
     })
 
     newSocket.on('supervisor-reply', (data: { spanishTrans: string; actionSummary: string; messageId: string }) => {
+      console.log('[FLOW][Worker] Received supervisor-reply via Socket.io:', {
+        messageId: data.messageId,
+        spanishTrans: data.spanishTrans?.slice(0, 50) + '...',
+        actionSummary: data.actionSummary?.slice(0, 50) + '...',
+      })
       const replyMessage: Message = {
         id: `reply-${Date.now()}`,
         spanishRaw: '',
@@ -71,21 +78,25 @@ export default function WorkerPage() {
       recognition.interimResults = false
 
       recognition.onstart = () => {
+        console.log('[FLOW][Worker][Voice] Speech recognition started, listening for Mexican Spanish')
         setIsRecording(true)
       }
 
       recognition.onresult = async (event: any) => {
         const transcript = event.results[0][0].transcript
+        const confidence = event.results[0][0].confidence
+        console.log('[FLOW][Worker][Voice] Speech recognition result:', { transcript, confidence })
         setIsRecording(false)
         await handleVoiceInput(transcript)
       }
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error)
+        console.error('[FLOW][Worker][Voice] Speech recognition error:', event.error)
         setIsRecording(false)
       }
 
       recognition.onend = () => {
+        console.log('[FLOW][Worker][Voice] Speech recognition ended')
         setIsRecording(false)
       }
 
@@ -94,6 +105,7 @@ export default function WorkerPage() {
   }, [])
 
   const handleVoiceInput = async (spanishText: string) => {
+    console.log('[FLOW][Worker] Voice input received, forwarding to API:', { workerId, spanishText })
     // Optimistic UI update
     const tempMessage: Message = {
       id: `temp-${Date.now()}`,
@@ -105,6 +117,7 @@ export default function WorkerPage() {
     setIsLoading(true)
 
     try {
+      console.log('[FLOW][Worker] POSTing to /api/messages...')
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -116,11 +129,18 @@ export default function WorkerPage() {
         }),
       })
 
+      console.log('[FLOW][Worker] API response status:', response.status)
+
       if (!response.ok) {
         throw new Error('Failed to send message')
       }
 
       const data = await response.json()
+      console.log('[FLOW][Worker] API success, received:', {
+        messageId: data.messageId,
+        urgency: data.urgency,
+        category: data.category,
+      })
       
       // Update the temporary message with real data
       setMessages((prev) =>
@@ -138,7 +158,7 @@ export default function WorkerPage() {
         )
       )
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('[FLOW][Worker] Error sending message:', error)
       // Remove the temporary message on error
       setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id))
       alert('Error al enviar mensaje. Por favor intenta de nuevo.')
@@ -150,9 +170,10 @@ export default function WorkerPage() {
   const handleMicrophoneClick = () => {
     if (recognitionRef.current && !isRecording) {
       try {
+        console.log('[FLOW][Worker][Voice] Microphone button pressed, starting speech recognition')
         recognitionRef.current.start()
       } catch (error) {
-        console.error('Error starting recognition:', error)
+        console.error('[FLOW][Worker][Voice] Error starting recognition:', error)
       }
     } else if (isRecording && recognitionRef.current) {
       recognitionRef.current.stop()

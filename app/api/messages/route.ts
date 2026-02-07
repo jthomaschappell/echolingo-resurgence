@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { translateSpanishToEnglish } from '@/lib/cerebras'
 import { analyzeAndReformatMessage } from '@/lib/claude'
 import { sendWhatsAppMessage } from '@/lib/twilio'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,16 +22,26 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeAndReformatMessage(spanishText, englishRaw)
 
     // Step 3: Store in database
-    const message = await prisma.message.create({
-      data: {
+    const { data: message, error: insertError } = await supabase
+      .from('Message')
+      .insert({
         workerId,
         spanishRaw: spanishText,
         englishRaw,
         englishFormatted: analysis.englishFormatted,
         category: analysis.category,
         urgency: analysis.urgency,
-      },
-    })
+      })
+      .select()
+      .single()
+
+    if (insertError || !message) {
+      console.error('Supabase insert error:', insertError)
+      return NextResponse.json(
+        { error: 'Failed to save message' },
+        { status: 500 }
+      )
+    }
 
     // Step 4: Send to supervisor via WhatsApp
     const supervisorWhatsApp = process.env.SUPERVISOR_WHATSAPP
@@ -41,12 +51,12 @@ export async function POST(request: NextRequest) {
           supervisorWhatsApp,
           analysis.englishFormatted
         )
-        
+
         // Update message with Twilio SID for reply threading
-        await prisma.message.update({
-          where: { id: message.id },
-          data: { twilioSid },
-        })
+        await supabase
+          .from('Message')
+          .update({ twilioSid })
+          .eq('id', message.id)
       } catch (error) {
         console.error('Failed to send WhatsApp, but message saved:', error)
         // Continue even if WhatsApp fails - message is saved

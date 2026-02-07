@@ -3,39 +3,38 @@
 Use this checklist to track your progress setting up the Crew Link app.
 
 ## ✅ Prerequisites
-- [ ] Node.js 18+ installed
-- [ ] npm installed
-- [ ] Chrome or Edge browser (for Web Speech API)
+- [x] Node.js 18+ installed
+- [x] npm installed
+- [x] Chrome or Edge browser (for Web Speech API)
 
 ## ✅ Service Accounts Created
-- [ ] Supabase account created
-- [ ] Cerebras account created
-- [ ] Anthropic Claude account created
+- [x] Supabase account created
+- [x] Cerebras account created
+- [x] Anthropic Claude account created
 - [ ] Twilio account created
 
 ## ✅ API Keys Obtained
-- [ ] Supabase project created and connection string copied
-- [ ] Cerebras API key generated
-- [ ] Claude API key generated (billing info added)
+- [x] Supabase project created and connection string copied
+- [x] Cerebras API key generated
+- [x] Claude API key generated (billing info added)
 - [ ] Twilio Account SID and Auth Token copied
 - [ ] Twilio WhatsApp sandbox joined
 
 ## ✅ Environment Setup
-- [ ] Cloned repository
-- [ ] Ran `npm install`
-- [ ] Created `.env` file from `.env.example`
-- [ ] Added `DATABASE_URL` to `.env`
-- [ ] Added `CEREBRAS_API_KEY` to `.env`
-- [ ] Added `ANTHROPIC_API_KEY` to `.env`
+- [x] Cloned repository
+- [x] Ran `npm install`
+- [x] Created `.env` file from `.env.example`
+- [x] Added `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to `.env`
+- [x] Added `CEREBRAS_API_KEY` to `.env`
+- [x] Added `ANTHROPIC_API_KEY` to `.env`
 - [ ] Added `TWILIO_ACCOUNT_SID` to `.env`
 - [ ] Added `TWILIO_AUTH_TOKEN` to `.env`
 - [ ] Added `TWILIO_WHATSAPP_FROM` to `.env`
 - [ ] Added `SUPERVISOR_WHATSAPP` to `.env`
 
 ## ✅ Database Setup
-- [ ] Ran `npm run db:generate`
-- [ ] Ran `npm run db:push`
-- [ ] Verified tables created in Supabase dashboard
+- [ ] Ran `supabase/schema.sql` in Supabase SQL Editor
+- [ ] Verified `Message` and `SupervisorReply` tables exist in Supabase dashboard
 
 ## ✅ Local Development
 - [ ] Started Next.js server (`npm run dev`)

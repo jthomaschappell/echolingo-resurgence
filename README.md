@@ -15,7 +15,7 @@ Real-time communication between Spanish-speaking Mexican workers and English-spe
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Express + Socket.io
-- **Database**: Supabase (PostgreSQL) + Prisma
+- **Database**: Supabase (PostgreSQL via client)
 - **AI Services**: Cerebras (translation), Claude (analysis)
 - **Messaging**: Twilio WhatsApp API
 
@@ -57,23 +57,18 @@ Real-time communication between Spanish-speaking Mexican workers and English-spe
    - Database Password: Create a strong password (save this!)
    - Region: Choose closest to your location
 4. Wait for project to finish setting up (1-2 minutes)
-5. In your project dashboard, click **Connect** button
-6. Select **URI** tab and copy the connection string
-7. Replace `[YOUR-PASSWORD]` with your actual database password
-8. Paste into your `.env` file as `DATABASE_URL`
+5. In your project dashboard, go to **Settings** → **API**
+6. Copy the **Project URL** and paste into `.env` as `NEXT_PUBLIC_SUPABASE_URL`
+7. Copy the **service_role** key (under "Project API keys") and paste into `.env` as `SUPABASE_SERVICE_ROLE_KEY`
+8. Run the schema: Go to **SQL Editor** → New query → paste contents of `supabase/schema.sql` → Run
 
-**Connection String Format:**
+**Environment variables:**
 ```
-DATABASE_URL="postgresql://postgres:your-password@db.abcdefghijklmnopqrst.supabase.co:5432/postgres"
-```
-
-**For Serverless Deployment (Vercel, etc.):**
-Use the **Transaction mode** pooling string (port 6543) and append `?pgbouncer=true`:
-```
-DATABASE_URL="postgresql://postgres:your-password@db.abcdefghijklmnopqrst.supabase.co:6543/postgres?pgbouncer=true"
+NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-**Note:** For local development, the direct connection (port 5432) works fine. Switch to pooled connection when deploying to serverless platforms.
+**Important:** Keep the service role key secret—it bypasses Row Level Security.
 
 #### 2. Cerebras API Key
 
@@ -196,7 +191,8 @@ See `.env.example` for all required variables:
 - `TWILIO_AUTH_TOKEN` - Twilio auth token
 - `TWILIO_WHATSAPP_FROM` - Twilio WhatsApp number (format: `whatsapp:+14155238886`)
 - `SUPERVISOR_WHATSAPP` - Supervisor's WhatsApp number (format: `whatsapp:+1...`)
-- `DATABASE_URL` - PostgreSQL connection string
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-side)
 - `SOCKET_SERVER_PORT` - Port for Socket.io server (default: 3001)
 - `NEXT_PUBLIC_SOCKET_SERVER_URL` - Socket.io server URL (for client connection)
 - `NEXT_PUBLIC_APP_URL` - Next.js app URL (for CORS)
@@ -278,12 +274,12 @@ echolingo-resurgence/
 │   ├── cerebras.ts              # Translation service
 │   ├── claude.ts                # Analysis service
 │   ├── twilio.ts                # WhatsApp service
-│   └── prisma.ts                # Database client
+│   └── supabase.ts              # Supabase client
 ├── server/
 │   ├── index.ts                 # Express + Socket.io server
-│   └── twilioWebhook.ts        # Twilio webhook handler
-├── prisma/
-│   └── schema.prisma            # Database schema
+│   └── twilioWebhook.ts         # Twilio webhook handler
+├── supabase/
+│   └── schema.sql               # Database schema (run in Supabase SQL Editor)
 └── package.json
 ```
 
@@ -291,23 +287,20 @@ echolingo-resurgence/
 
 - **Next.js dev server**: `npm run dev` (port 3000)
 - **Socket.io server**: `npm run server` (port 3001)
-- **Database studio**: `npm run db:studio`
-- **Generate Prisma client**: `npm run db:generate`
-- **Push schema changes**: `npm run db:push`
 
 ## Production Deployment
 
 ### Database (Supabase)
 Your Supabase database is already set up from the development setup. For production:
-1. Go to your Supabase project → **Settings** → **Database**
-2. Use the **Connection Pooling** string for serverless deployments (append `?pgbouncer=true`)
+1. Same Supabase project URL and service role key work in production
+2. Ensure production env has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 3. Consider upgrading from the free tier if you expect high traffic
 
 ### Next.js App (Vercel - Recommended)
 1. Push your code to GitHub
 2. Go to [vercel.com](https://vercel.com) and import your repository
 3. Add all environment variables from your `.env` file
-4. Important: Use the Supabase connection pooling URL for `DATABASE_URL`
+4. Add all env vars including `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 5. Deploy
 
 ### Socket.io Server (Railway/Render)
