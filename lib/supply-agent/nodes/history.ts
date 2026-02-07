@@ -39,7 +39,7 @@ export async function lookupHistory(state: SupplyAgentState): Promise<Partial<Su
     }
 
     const quantities = orders.map((o) => o.quantity).filter((q): q is number => q != null)
-    const costs = orders.map((o) => o.cost).filter((c): c is number => c != null)
+    const costs = orders.map((o) => o.cost).map((c) => parseFloat(c)).filter((c): c is number => !isNaN(c))
 
     const history: HistoryContext = {
       averageQuantity: quantities.length > 0 ? Math.round(quantities.reduce((a, b) => a + b, 0) / quantities.length) : null,

@@ -59,8 +59,7 @@ export async function formatAndPersist(state: SupplyAgentState): Promise<Partial
   }
 
   lines.push(`🏪 Suggested supplier: ${supplierName}`)
-  // falsy-0 safe: use ?? instead of ||
-  if (supplier.estimatedTotal ?? null) lines.push(`  Est. total: $${supplier.estimatedTotal}`)
+  if (supplier.estimatedTotal != null) lines.push(`  Est. total: $${supplier.estimatedTotal}`)
   if (supplier.deliveryDays != null) lines.push(`  Delivery: ~${supplier.deliveryDays} days`)
   lines.push(``)
   lines.push(`Reply: APPROVE / MODIFY [qty] / REJECT [reason] / ASK [question]`)
