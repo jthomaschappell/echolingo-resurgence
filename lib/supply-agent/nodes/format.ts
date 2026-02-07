@@ -17,6 +17,9 @@ const SUPPLIER_DB: Record<string, SupplierRecommendation> = {
   insulation: { name: 'WallBoard Direct', estimatedTotal: 380.00, deliveryDays: 3 },
   gravel: { name: 'ReadyMix Central', estimatedTotal: 650.00, deliveryDays: 1 },
   sand: { name: 'ReadyMix Central', estimatedTotal: 450.00, deliveryDays: 1 },
+  gloves: { name: 'Safety Supply', estimatedTotal: 250.00, deliveryDays: 1 },
+  safety_glasses: { name: 'Safety Supply', estimatedTotal: 180.00, deliveryDays: 1 },
+  hard_hat: { name: 'Safety Supply', estimatedTotal: 150.00, deliveryDays: 1 },
 }
 
 export async function formatAndPersist(state: SupplyAgentState): Promise<Partial<SupplyAgentState>> {

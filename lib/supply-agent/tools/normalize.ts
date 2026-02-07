@@ -14,6 +14,9 @@ const ITEM_ALIASES: Record<string, string[]> = {
   'insulation': ['insulation', 'aislamiento', 'aislante', 'fiberglass insulation'],
   'gravel': ['gravel', 'grava', 'aggregate', 'agregado'],
   'sand': ['sand', 'arena'],
+  'gloves': ['gloves', 'glove', 'work gloves', 'guantes', 'guante'],
+  'safety_glasses': ['safety glasses', 'glasses', 'lentes de seguridad', 'lentes'],
+  'hard_hat': ['hard hat', 'hard hats', 'casco', 'cascos'],
 }
 
 const UNIT_ALIASES: Record<string, string[]> = {
@@ -27,6 +30,7 @@ const UNIT_ALIASES: Record<string, string[]> = {
   'rolls': ['rolls', 'roll', 'rollos', 'rollo'],
   'gallons': ['gallons', 'gallon', 'gal', 'galones', 'galón'],
   'pounds': ['pounds', 'pound', 'lbs', 'lb', 'libras', 'libra'],
+  'pairs': ['pairs', 'pair', 'pares', 'par'],
 }
 
 export function normalizeItem(input: string): string {
