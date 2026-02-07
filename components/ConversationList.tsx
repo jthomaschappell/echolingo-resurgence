@@ -6,11 +6,13 @@ import MessageBubble, { Message } from './MessageBubble'
 interface ConversationListProps {
   messages: Message[]
   isLoading?: boolean
+  workerId?: string
 }
 
 export default function ConversationList({
   messages,
   isLoading,
+  workerId,
 }: ConversationListProps) {
   const { t } = useLanguage()
   return (
@@ -44,7 +46,7 @@ export default function ConversationList({
         </div>
       )}
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} />
+        <MessageBubble key={message.id} message={message} workerId={workerId} />
       ))}
       {isLoading && (
         <div className="flex items-center gap-3 mt-4 p-4 bg-white/90 rounded-xl border border-palette-golden/20">

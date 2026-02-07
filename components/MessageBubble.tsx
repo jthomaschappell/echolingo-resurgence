@@ -1,8 +1,5 @@
 'use client'
 
-import { useLanguage } from '@/context/LanguageContext'
-import UrgencyBadge from './UrgencyBadge'
-
 export interface Message {
   id: string
   spanishRaw: string
@@ -13,58 +10,52 @@ export interface Message {
   createdAt: Date | string
   spanishTrans?: string
   actionSummary?: string
+  contextNotes?: string
 }
 
 interface MessageBubbleProps {
   message: Message
+  workerId?: string
 }
 
-export default function MessageBubble({ message }: MessageBubbleProps) {
-  const { t } = useLanguage()
+function formatDate(d: Date | string): string {
+  const date = typeof d === 'string' ? new Date(d) : d
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+export default function MessageBubble({ message, workerId }: MessageBubbleProps) {
   const isSupervisorReply = 'actionSummary' in message && message.actionSummary
 
+  // Only the likely translation given construction context (strip quotation marks)
+  const raw =
+    isSupervisorReply
+      ? (message.spanishTrans || message.actionSummary)
+      : (message.englishFormatted || message.englishRaw)
+  const translation = (raw?.replace(/^["']+|["']+$/g, '').trim()) || raw
+
+  if (!translation) return null
+
+  const sender = isSupervisorReply ? 'Supervisor' : (workerId || 'Worker')
+
   return (
-    <div className="mb-5">
-      {message.spanishRaw && (
-        <div className="mb-2">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-stripe-primary flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-sm font-semibold">W</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <UrgencyBadge urgency={message.urgency} />
-              </div>
-              <p className="text-stripe-dark text-base">{message.spanishRaw}</p>
-              {message.englishRaw && (
-                <p className="text-stripe-muted text-sm mt-1 italic">
-                  {message.englishRaw}
-                </p>
-              )}
-            </div>
-          </div>
+    <div className="mb-5 p-4 bg-white/90 rounded-xl border border-palette-golden/20 shadow-stripe">
+      <p className="text-stripe-dark text-base">{translation}</p>
+      <div className="text-xs text-stripe-muted mt-3 pt-2 border-t border-stripe-muted/20 space-y-1">
+        {message.contextNotes && (
+          <p className="italic">{message.contextNotes}</p>
+        )}
+        <div className="flex items-center gap-3">
+          <span>{formatDate(message.createdAt)}</span>
+          <span>•</span>
+          <span>{sender}</span>
         </div>
-      )}
-      {isSupervisorReply && (
-        <div className="mt-2 p-4 bg-white/90 rounded-xl border border-palette-golden/20 shadow-stripe">
-          <p className="text-stripe-dark text-sm font-medium">
-            {(message as any).actionSummary}
-          </p>
-          {(message as any).spanishTrans && (
-            <p className="text-stripe-muted text-sm mt-1">
-              {(message as any).spanishTrans}
-            </p>
-          )}
-        </div>
-      )}
-      {message.englishFormatted && !isSupervisorReply && (
-        <div className="text-xs text-stripe-muted mt-1 flex items-center gap-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-          </svg>
-          {t.sentToSupervisor}
-        </div>
-      )}
+      </div>
     </div>
   )
 }

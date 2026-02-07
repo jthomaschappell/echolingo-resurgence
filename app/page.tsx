@@ -171,6 +171,7 @@ export default function WorkerPage() {
                 englishFormatted: data.englishFormatted,
                 urgency: data.urgency,
                 category: data.category,
+                contextNotes: data.contextNotes ?? undefined,
               }
             : msg
         )
@@ -243,7 +244,7 @@ export default function WorkerPage() {
           </div>
         )}
         <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-xl border border-palette-golden/30 overflow-hidden flex flex-col min-h-[200px] shadow-stripe">
-          <ConversationList messages={messages} isLoading={isLoading} />
+          <ConversationList messages={messages} isLoading={isLoading} workerId={workerId} />
         </div>
         <div className="py-6">
           <MicrophoneButton

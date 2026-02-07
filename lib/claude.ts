@@ -8,6 +8,7 @@ export interface MessageAnalysis {
   category: 'delay_report' | 'clarification' | 'completion' | 'safety' | 'material_need'
   urgency: 'normal' | 'high'
   englishFormatted: string
+  contextNotes?: string
 }
 
 export async function analyzeAndReformatMessage(
@@ -30,6 +31,7 @@ export async function analyzeAndReformatMessage(
           content: `Analyze this construction site communication and provide:
 1. Category: one of [delay_report, clarification, completion, safety, material_need]
 2. A professionally formatted English message suitable for a construction supervisor
+3. Optional contextNotes: brief thoughts about construction context, ambiguity, or relevant details (omit if none)
 
 Original Spanish: "${spanishText}"
 English Translation: "${englishRaw}"
@@ -37,7 +39,8 @@ English Translation: "${englishRaw}"
 Respond in JSON format:
 {
   "category": "delay_report|clarification|completion|safety|material_need",
-  "englishFormatted": "Professional English message formatted for supervisor communication"
+  "englishFormatted": "Professional English message formatted for supervisor communication",
+  "contextNotes": "Optional brief note about context, ambiguity, or construction-specific details"
 }`,
         },
       ],
@@ -54,6 +57,7 @@ Respond in JSON format:
           category: parsed.category || 'clarification',
           urgency: hasUrgency ? 'high' : 'normal',
           englishFormatted: parsed.englishFormatted || englishRaw,
+          contextNotes: parsed.contextNotes?.trim() || undefined,
         }
         console.log('[FLOW][Claude] analyzeAndReformatMessage done:', result)
         return result
@@ -66,6 +70,7 @@ Respond in JSON format:
       category: hasUrgency ? 'safety' : 'clarification',
       urgency: hasUrgency ? 'high' : 'normal',
       englishFormatted: englishRaw,
+      contextNotes: undefined,
     }
   } catch (error) {
     console.error('[FLOW][Claude] analyzeAndReformatMessage error (using fallback):', error)
@@ -74,6 +79,7 @@ Respond in JSON format:
       category: hasUrgency ? 'safety' : 'clarification',
       urgency: hasUrgency ? 'high' : 'normal',
       englishFormatted: englishRaw,
+      contextNotes: undefined,
     }
   }
 }

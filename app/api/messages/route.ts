@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
       englishFormatted: analysis.englishFormatted,
       category: analysis.category,
       urgency: analysis.urgency,
+      contextNotes: analysis.contextNotes ?? null,
       supplyRequestId: supplyResult?.supplyRequestId ?? null,
     })
   } catch (error) {
