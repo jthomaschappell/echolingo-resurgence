@@ -11,6 +11,8 @@ export interface Message {
   urgency: 'normal' | 'high'
   category?: string
   createdAt: Date | string
+  spanishTrans?: string
+  actionSummary?: string
 }
 
 interface MessageBubbleProps {

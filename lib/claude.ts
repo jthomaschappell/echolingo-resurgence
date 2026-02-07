@@ -1,11 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const claudeClient = new Anthropic({
+export const claudeClient = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
 export interface MessageAnalysis {
-  category: 'delay_report' | 'clarification' | 'completion' | 'safety'
+  category: 'delay_report' | 'clarification' | 'completion' | 'safety' | 'material_need'
   urgency: 'normal' | 'high'
   englishFormatted: string
 }
@@ -28,7 +28,7 @@ export async function analyzeAndReformatMessage(
         {
           role: 'user',
           content: `Analyze this construction site communication and provide:
-1. Category: one of [delay_report, clarification, completion, safety]
+1. Category: one of [delay_report, clarification, completion, safety, material_need]
 2. A professionally formatted English message suitable for a construction supervisor
 
 Original Spanish: "${spanishText}"
@@ -36,7 +36,7 @@ English Translation: "${englishRaw}"
 
 Respond in JSON format:
 {
-  "category": "delay_report|clarification|completion|safety",
+  "category": "delay_report|clarification|completion|safety|material_need",
   "englishFormatted": "Professional English message formatted for supervisor communication"
 }`,
         },
