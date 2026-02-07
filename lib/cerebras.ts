@@ -9,7 +9,7 @@ export async function translateSpanishToEnglish(spanishText: string): Promise<st
   try {
     console.log('[FLOW][Cerebras] translateSpanishToEnglish called, input:', spanishText?.slice(0, 80) + '...')
     const response = await cerebrasClient.chat.completions.create({
-      model: 'llama-3.1-8b-instruct',
+      model: 'llama3.1-8b',
       messages: [
         {
           role: 'system',
@@ -37,7 +37,7 @@ export async function translateEnglishToSpanish(englishText: string): Promise<st
   try {
     console.log('[FLOW][Cerebras] translateEnglishToSpanish called, input:', englishText?.slice(0, 80) + '...')
     const response = await cerebrasClient.chat.completions.create({
-      model: 'llama-3.1-8b-instruct',
+      model: 'llama3.1-8b',
       messages: [
         {
           role: 'system',
